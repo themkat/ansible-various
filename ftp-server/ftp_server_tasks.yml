@@ -1,6 +1,5 @@
 ---
 - name: Install vsftpd
   package: name=vsftpd state=present
-  
 - name: Make sure bftpd is started and active at startup
   service: name=vsftpd state=started enabled=true
