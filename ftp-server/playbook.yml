@@ -1,0 +1,20 @@
+---
+- hosts: all
+  become: true
+
+  vars:
+    username: ftpuser
+  
+  tasks:
+    - name: Set up user we want to use for FTP access
+      # TODO: find a better way than having the password cleartext. Vault?
+      user:
+        name: "{{ username }}"
+        password: "{{ username | password_hash('sha512') }}"
+        state: present
+        
+    - import_tasks: ftp_server_tasks.yml
+
+    # - import_tasks: usb_drive_setup_tasks.yml
+    #   vars:
+    #     username: "{{ username }}"

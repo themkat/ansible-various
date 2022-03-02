@@ -1,0 +1,11 @@
+---
+# TODO: is the USB stuff better suited somewhere else?
+# TODO: setting up automatic monting of usb drives and similar (usbmount? available in non ubuntu distros?)
+# TODO: maybe just import playbooks for each?
+
+# TODO: better description
+- name: Add usb drives (dvd-roms etc.) if plugged in
+  become: false
+  
+  file:
+    # TODO: add some symbolic links 
