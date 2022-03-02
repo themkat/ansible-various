@@ -1,0 +1,28 @@
+name: Validate Ansible playbooks
+
+on: [push, pull_request]
+
+# TODO: check if there is any way we could use matrix or something else to run the same for each folder
+# TODO: simplify a bit. Now its quick an dirty some places :P 
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-python@v2
+        with:
+          python-version: '3.x'
+      - name: Install yamllint
+        run: |
+          sudo apt-get install yamllint
+      - name: Install Ansible
+        run: |
+          pip install ansible
+      - name: Validate yaml files
+        working-directory: ./ftp-server
+        run: |
+          yamllint *.yml
+      - name: Syntax check Ansible playbook
+        working-directory: ./ftp-server
+        run: |
+          ansible-playbook playbook.yml --syntax-check
