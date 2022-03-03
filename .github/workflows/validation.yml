@@ -2,10 +2,16 @@ name: Validate Ansible playbooks
 
 on: [push, pull_request]
 
-# TODO: check if there is any way we could use matrix or something else to run the same for each folder
-# TODO: simplify a bit. Now its quick an dirty some places :P 
 jobs:
   validate:
+    # TODO: consider making this more dynamic
+    strategy:
+      matrix:
+        directory:
+          - ftp-server
+
+    name: Validate ${{ matrix.directory }}
+          
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
@@ -16,18 +22,19 @@ jobs:
         run: |
           pip install ansible ansible-lint yamllint molecule[docker]==3.5.2 docker
       - name: Validate yaml files
-        working-directory: ./ftp-server
+        working-directory: ${{ matrix.directory }}
         run: |
           yamllint *.yml
       - name: Syntax check Ansible playbook
-        working-directory: ./ftp-server
+        working-directory: ${{ matrix.directory }}
         run: |
           ansible-playbook playbook.yml --syntax-check
       - name: Lint Ansible playbook
-        working-directory: ./ftp-server
+        working-directory: ${{ matrix.directory }}
         run: |
           ansible-lint playbook.yml
-      - name: Molecule tests
-        working-directory: ./ftp-server
+      # TODO: any way we can make it clear this is skipped if molecule folder does not exist? 
+      - name: Molecule tests (if exists)
+        working-directory: ${{ matrix.directory }}
         run: |
-          molecule test
+          test ! -d molecule || molecule test
