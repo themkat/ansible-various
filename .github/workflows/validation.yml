@@ -14,7 +14,7 @@ jobs:
           python-version: '3.x'
       - name: Install Ansible and dependencies
         run: |
-          pip install ansible ansible-lint yamllint
+          pip install ansible ansible-lint yamllint molecule[docker]==3.5.2 docker
       - name: Validate yaml files
         working-directory: ./ftp-server
         run: |
@@ -27,3 +27,7 @@ jobs:
         working-directory: ./ftp-server
         run: |
           ansible-lint playbook.yml
+      - name: Molecule tests
+        working-directory: ./ftp-server
+        run: |
+          molecule test

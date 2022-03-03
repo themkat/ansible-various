@@ -3,14 +3,31 @@
   become: true
   vars:
     username: ftpuser
+
+  pre_tasks:
+    - name: Update package archives (Debian-based)
+      apt:
+        update_cache: true
+        cache_valid_time: 7200
+      when: ansible_os_family == "Debian"
+  
   tasks:
     - name: Set up user we want to use for FTP access
       # TODO: find a better way than having the password cleartext. Vault?
       user:
         name: "{{ username }}"
-        password: "{{ username | password_hash('sha512') }}"
+        password: "{{ username | password_hash('sha512', 'saltval') }}"
         state: present
+
+    # - name: Create a file to be able to verify working conditions
+    #   file:
+    #     path: "/home/{{ username }}/EMPTY"
+    #     state: touch
+    #     access_time: preserve
+    #     modification_time: preserve
+        
     - import_tasks: ftp_server_tasks.yml
+
     - import_tasks: usb_drive_setup_tasks.yml
       vars:
         username: "{{ username }}"

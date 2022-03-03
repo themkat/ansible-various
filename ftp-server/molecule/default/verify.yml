@@ -1,0 +1,14 @@
+---
+- name: Verify
+  hosts: all
+  gather_facts: false
+  tasks:
+  # - name: Check if we have access to FTP server
+  #   get_url:
+  #     url: ftp://localhost/EMPTY
+  #     dest: /tmp/emptyfile
+  #     username: ftpuser
+  #     password: ftpuser
+  - name: Test
+    assert:
+      that: true
