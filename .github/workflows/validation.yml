@@ -9,6 +9,7 @@ jobs:
       matrix:
         directory:
           - ftp-server
+          - kubernetes-k3s
 
     name: Validate ${{ matrix.directory }}
           
