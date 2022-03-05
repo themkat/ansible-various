@@ -1,13 +1,13 @@
 # -*- mode: ruby -*-
 # vi: set ft=ruby :
 Vagrant.configure("2") do |config|
-  config.vm.define "server" do |ubuntu|
-    ubuntu.vm.box = "mpasternak/focal64-arm"
-    ubuntu.vm.network :private_network, ip: "192.168.111.2"
+  config.vm.define "server" do |vmdef|
+    vmdef.vm.box = "avi0xff/debian10-arm64"
+    vmdef.vm.network :private_network, ip: "192.168.111.2"
   end
 
-  config.vm.define "node" do |ubuntu|
-    ubuntu.vm.box = "mpasternak/focal64-arm"
-    ubuntu.vm.network :private_network, ip: "192.168.111.3"
+  config.vm.define "node" do |vmdef|
+    vmdef.vm.box = "avi0xff/debian10-arm64"
+    vmdef.vm.network :private_network, ip: "192.168.111.3"
   end
 end

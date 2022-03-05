@@ -1,13 +1,12 @@
 ---
 # TODO: any way we can run this playbook to upgrade if updates are available? Or is that better solved in other ways?
 # TODO: should we set up a private registry as well? docker-registry? looks okay?
-# TODO: make a setup to make a k3s setup:
-# https://k3s.io/
 - name: Setup main k3s server
   hosts: server
   become: true
   
   tasks:
+    # TODO: how to send the config to the server? any things we can read from the docker registry service? set up here in files somehow? 
     # set up docker registry
     # TODO: is this optimal if we don't use docker for k3s? (containerd instead). 
     # - name: Install Docker registry
@@ -22,9 +21,10 @@
     #     name: docker-registry
     #     state: started
     #     enabled: true
-
+    
     # Set up k3s master
-    # TODO: how to make the curl stuff idempotent? Check for file existence? 
+    # TODO: how to make the curl stuff idempotent? Check for file existence?
+    # TODO: check if an alternative way is possible. ansible-lint not happy, so probably not a good sign :P 
     - name: Install k3s
       shell: >
         curl -sfL https://get.k3s.io | sh -
@@ -34,7 +34,7 @@
         INSTALL_K3S_NAME: server
         K3S_KUBECONFIG_MODE: 644
         K3S_NODE_NAME: main
-
+        
     - name: Make sure k3s is active
       service:
         name: k3s-server
@@ -43,8 +43,13 @@
 
     # TODO: any more k8s config? storage providers and other things that make life easier later?
 
-    # TODO: any better way we can handle this?
-    - name: Save access token for later use
+    # TODO: any better way we can handle this? the saving for later parts?
+    - name: Save server hostname for later use
+      set_fact:
+        # seems like we can't just use the ansible_host variable in later plays for other hosts...
+        k3s_server: "{{ ansible_host }}"
+    
+    - name: Save access token to be able to set up workers later
       slurp:
         src: /var/lib/rancher/k3s/server/node-token
       register: k3s_token
@@ -73,8 +78,16 @@
         # TODO: any clever ways to make unique names for the workers here?
         INSTALL_K3S_NAME: worker
         K3S_NODE_NAME: worker
-        K3S_URL: "https://{{ hostvars[groups['server'][0]]['ansible_default_ipv4'] }}:6443"
-        K3S_TOKEN: "{{ hostvars[groups['server'][0]]['k3s_token'] }}"
+        K3S_URL: "https://{{ hostvars[groups['server'][0]]['k3s_server'] }}:6443"
+        K3S_TOKEN: "{{ hostvars[groups['server'][0]]['k3s_token']['content'] | b64decode | trim }}"
+
+    - name: print server token
+      debug:
+        msg: "{{ hostvars[groups['server'][0]]['k3s_token']['content'] | b64decode | trim }}"
+        
+    - name: print server ip
+      debug:
+        msg: "{{ hostvars[groups['server'][0]]['k3s_server'] }}"
         
     - name: Make sure k3s is active
       service:
