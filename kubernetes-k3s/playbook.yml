@@ -69,6 +69,7 @@
       copy:
         src: k8s/registry.yml
         dest: /registry.yml
+        mode: '0644'
 
     - name: Set up private registry
       k8s:
