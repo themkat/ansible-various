@@ -1,0 +1,8 @@
+mirrors:
+  docker.io:
+    endpoint:
+      - "http://{{ hostvars[groups['server'][0]]['k3s_server'] }}/"
+configs:
+  "{{ hostvars[groups['server'][0]]['k3s_server'] }}":
+    tls:
+      insecure_skip_verify: true

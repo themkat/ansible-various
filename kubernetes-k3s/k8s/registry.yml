@@ -1,0 +1,85 @@
+---
+# TODO: find a way to make the URL be something meaningful... name in images
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: private-registry
+---
+# TODO: is this sufficient?
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: registry-pvc
+  namespace: private-registry
+spec:
+  accessModes:
+    - ReadWriteOnce
+  storageClassName: local-path
+  resources:
+    requests:
+      storage: 2Gi
+---
+# TODO: maybe secure it at one point
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: registry-deployment
+  namespace: private-registry
+  labels:
+    app: private-registry
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: private-registry
+  template:
+    metadata:
+      labels:
+        app: private-registry
+    spec:
+      volumes:
+        - name: registry-data
+          persistentVolumeClaim:
+            claimName: registry-pvc
+      containers:
+        - name: myregistry
+          image: registry:2
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 5000
+          # TODO: any environment variables to set to make the host urls etc.
+          
+          volumeMounts:
+            - name: registry-data
+              mountPath: /var/lib/registry
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: registry-service
+  namespace: private-registry
+spec:
+  selector:
+    app: private-registry
+  type: ClusterIP
+  ports:
+    - protocol: TCP
+      port: 5000
+      targetPort: 5000
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: registry-ingress
+  namespace: private-registry
+spec:
+  rules:
+    - http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: registry-service
+                port:
+                  number: 5000

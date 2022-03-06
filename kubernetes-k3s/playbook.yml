@@ -1,28 +1,38 @@
 ---
 # TODO: any way we can run this playbook to upgrade if updates are available?
 #       Or is that better solved in other ways?
-# TODO: should we set up a private registry as well? docker-registry?
+# TODO: any tags that can improve the playbook?
+# TODO: should I consider using blocks for some of the parts here? main install in one, components in one etc.?
+# Drawback: if server dies, the cluster dies. Solvable by external DB and multiple servers
 - name: Setup main k3s server
   hosts: server
   become: true
 
+  handlers:
+    - name: restart k3s
+      service:
+        name: k3s-server
+        state: restarted
+
+  # needed for k8s module to work
+  # seems excessive to have to install pip and everything...
+  pre_tasks:
+    - name: Update package archives (Debian-based)
+      apt:
+        update_cache: true
+        cache_valid_time: 7200
+      when: ansible_os_family == "Debian"
+    
+    - name: Install pip3
+      package:
+        name: python3-pip
+        state: present
+    
+    - name: Install Python Kubernetes handling package
+      pip:
+        name: openshift
+
   tasks:
-    # TODO: how to send the config to the server? any things we can read from the docker registry service? set up here in files somehow? 
-    # set up docker registry
-    # TODO: is this optimal if we don't use docker for k3s? (containerd instead). 
-    # - name: Install Docker registry
-    #   package:
-    #     name:
-    #       - docker
-    #       - docker-registry
-    #     state: present
-
-    # - name: Make sure Docker registry is running
-    #   service:
-    #     name: docker-registry
-    #     state: started
-    #     enabled: true
-
     # Set up k3s master
     # TODO: see if this can be rewritten in a clean way with get_url and command/script
     - name: Install k3s
@@ -43,8 +53,6 @@
         state: started
         enabled: true
 
-    # TODO: any more k8s config?
-
     - name: Save server hostname for later use
       set_fact:
         # can't use from hostvars in other plays
@@ -55,8 +63,31 @@
         src: /var/lib/rancher/k3s/server/node-token
       register: k3s_token
 
+    # setting up k8s resources part 
+    # TODO: should maybe have a wait-for?
+    - name: Upload k8s crd for private registry
+      copy:
+        src: k8s/registry.yml
+        dest: /registry.yml
+
+    - name: Set up private registry
+      k8s:
+        src: /registry.yml
+        kubeconfig: /etc/rancher/k3s/k3s.yaml
+        state: present
+
+    - name: Set up container registry configuration
+      template:
+        src: k3s/registries.yaml.jinja
+        dest: /etc/rancher/k3s/registries.yaml
+        mode: '0644'
+      notify: restart k3s
+        
+    # TODO: any more k8s config?
+
     # TODO: any better way to do this? any access policy ctl program to use?
-    # TODO: now we have to do manual work to get it 
+    # TODO: now we have to do manual work to get it
+    # TODO: is something like dex a good idea? 
     - name: Fetch k3s file to easily be able to connect
       fetch:
         src: /etc/rancher/k3s/k3s.yaml
@@ -67,6 +98,29 @@
   hosts: worker
   become: true
 
+  handlers:
+    - name: restart k3s
+      service:
+        name: k3s-worker
+        state: restarted
+
+  # needed for k8s module to work
+  pre_tasks:
+    - name: Update package archives (Debian-based)
+      apt:
+        update_cache: true
+        cache_valid_time: 7200
+      when: ansible_os_family == "Debian"
+    
+    - name: Install pip3
+      package:
+        name: python3-pip
+        state: present
+    
+    - name: Install Python Kubernetes handling package
+      pip:
+        name: openshift
+
   tasks:
     # TODO: actually make it fail it shell command fails...
     #       now it just say changed and does nothing
@@ -76,7 +130,6 @@
       args:
         creates: /usr/local/bin/k3s
       environment:
-        # TODO: any clever ways to make unique names for the workers here?
         INSTALL_K3S_NAME: worker
         K3S_NODE_NAME: "worker-{{ groups['worker'].index(inventory_hostname) }}"
         K3S_URL: "https://{{ hostvars[groups['server'][0]]['k3s_server'] }}:6443"
@@ -89,3 +142,16 @@
         name: k3s-worker
         state: started
         enabled: true
+
+    - name: Make directory for registry configuration if not present
+      file:
+        path: /etc/rancher/k3s
+        state: directory
+        mode: '0644'
+        
+    - name: Set up container registry configuration
+      template:
+        src: k3s/registries.yaml.jinja
+        dest: /etc/rancher/k3s/registries.yaml
+        mode: '0644'
+      notify: restart k3s
