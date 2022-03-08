@@ -1,0 +1,12 @@
+---
+- name: Verify
+  hosts: all
+  gather_facts: false
+  # tasks:
+  # - name: Check that we have the correct number of nodes
+  #   block:
+  #     - name: Get nodes information
+  #       k8s_info:
+  #         kind: Node
+  #         kubeconfig: "../../k3s-config/the-server/etc/rancher/k3s/k3s.yaml"
+  #       register: nodes

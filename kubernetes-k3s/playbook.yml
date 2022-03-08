@@ -23,9 +23,12 @@
         cache_valid_time: 7200
       when: ansible_os_family == "Debian"
     
-    - name: Install pip3
+    - name: Install pip3 (and curl if needed)
       package:
-        name: python3-pip
+        name:
+          - python3-pip
+          - curl
+          - nftables
         state: present
     
     - name: Install Python Kubernetes handling package
@@ -113,9 +116,11 @@
         cache_valid_time: 7200
       when: ansible_os_family == "Debian"
     
-    - name: Install pip3
+    - name: Install pip3 (and curl if needed)
       package:
-        name: python3-pip
+        name:
+          - python3-pip
+          - curl
         state: present
     
     - name: Install Python Kubernetes handling package
