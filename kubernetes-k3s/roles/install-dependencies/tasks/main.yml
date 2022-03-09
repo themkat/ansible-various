@@ -1,0 +1,24 @@
+---
+- name: Update package archives (Debian-based)
+  apt:
+    update_cache: true
+    cache_valid_time: 7200
+  when: ansible_os_family == "Debian" and (dependencies.packages | length > 0 or dependencies.pip | length > 0)
+    
+- name: Install dependencies
+  package:
+    name: "{{ item }}"
+    state: present
+  with_items: "{{ dependencies.packages}}"
+
+- name: Install pip3
+  package:
+    name:
+      - python3-pip
+    state: present
+  when: dependencies.pip | length > 0
+    
+- name: Install Python dependencies
+  pip:
+    name: "{{ item }}"
+  with_items: "{{ dependencies.pip }}"

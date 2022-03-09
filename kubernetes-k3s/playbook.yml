@@ -15,25 +15,15 @@
         state: restarted
 
   # needed for k8s module to work
-  # seems excessive to have to install pip and everything...
-  pre_tasks:
-    - name: Update package archives (Debian-based)
-      apt:
-        update_cache: true
-        cache_valid_time: 7200
-      when: ansible_os_family == "Debian"
-    
-    - name: Install pip3 (and curl if needed)
-      package:
-        name:
-          - python3-pip
-          - curl
-          - nftables
-        state: present
-    
-    - name: Install Python Kubernetes handling package
+  vars:
+    dependencies:
+      packages:
+        - curl
       pip:
-        name: openshift
+        - openshift
+  
+  roles:
+    - install-dependencies
 
   tasks:
     # Set up k3s master
@@ -109,23 +99,15 @@
         state: restarted
 
   # needed for k8s module to work
-  pre_tasks:
-    - name: Update package archives (Debian-based)
-      apt:
-        update_cache: true
-        cache_valid_time: 7200
-      when: ansible_os_family == "Debian"
-    
-    - name: Install pip3 (and curl if needed)
-      package:
-        name:
-          - python3-pip
-          - curl
-        state: present
-    
-    - name: Install Python Kubernetes handling package
+  vars:
+    dependencies:
+      packages:
+        - curl
       pip:
-        name: openshift
+        - openshift
+  
+  roles:
+    - install-dependencies
 
   tasks:
     # TODO: actually make it fail it shell command fails...
