@@ -1,12 +1,23 @@
 ---
 - name: Verify
-  hosts: all
+  hosts: the-server
   gather_facts: false
-  # tasks:
-  # - name: Check that we have the correct number of nodes
-  #   block:
-  #     - name: Get nodes information
-  #       k8s_info:
-  #         kind: Node
-  #         kubeconfig: "../../k3s-config/the-server/etc/rancher/k3s/k3s.yaml"
-  #       register: nodes
+
+  vars:
+    kubeconfig: "/etc/rancher/k3s/k3s.yaml"
+  
+  tasks:
+    # - name: Check that we have the correct number of nodes (worker node also found)
+    #   k8s_info:
+    #     kind: Node
+    #     kubeconfig: "{{ kubeconfig }}"
+    #   register: nodes
+    #   failed_when: nodes|length == 0 or nodes.resources|length != 2
+      
+    - name: Check that we have a private registry pod in the private-registry namespace
+      k8s_info:
+        kind: Pod
+        namespace: private-registry
+        kubeconfig: "{{ kubeconfig }}"
+      register: pods
+      failed_when: pods.resources|length != 1 #and pods[0].status != "Running"

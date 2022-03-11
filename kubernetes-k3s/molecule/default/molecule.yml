@@ -1,11 +1,13 @@
 ---
 dependency:
   name: galaxy
+  options:
+    requirements-file: ../../requirements.yml
 driver:
   name: docker
 platforms:
   - name: the-server
-    image: "geerlingguy/docker-debian10-ansible:latest"
+    image: "geerlingguy/docker-debian11-ansible:latest"
     command: ""
     volumes:
       - /sys/fs/cgroup:/sys/fs/cgroup:ro
@@ -20,7 +22,7 @@ platforms:
     groups:
       - server
   - name: the-worker
-    image: "geerlingguy/docker-debian10-ansible:latest"
+    image: "geerlingguy/docker-debian11-ansible:latest"
     command: ""
     volumes:
       - /sys/fs/cgroup:/sys/fs/cgroup:ro
