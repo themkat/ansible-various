@@ -26,6 +26,10 @@ jobs:
         working-directory: ${{ matrix.directory }}
         run: |
           yamllint *.yml
+      - name: Install ansible-galaxy requirements (if any)
+        working-directory: ${{ matrix.directory }}
+        run: |
+          test ! -f requirements.yml || ansible-galaxy install -r requirements.yml
       - name: Syntax check Ansible playbook
         working-directory: ${{ matrix.directory }}
         run: |
