@@ -34,8 +34,6 @@
     - geerlingguy.firewall
 
   tasks:
-    - meta: flush_handlers
-    
     # Set up k3s master
     # TODO: see if this can be rewritten in a clean way with get_url and command/script
     - name: Install k3s
@@ -127,8 +125,6 @@
     - geerlingguy.firewall
 
   tasks:
-    - meta: flush_handlers
-    
     # TODO: actually make it fail it shell command fails...
     #       now it just say changed and does nothing
     - name: Install k3s (as a worker/agent)
