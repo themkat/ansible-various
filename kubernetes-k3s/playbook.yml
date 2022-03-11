@@ -21,11 +21,21 @@
         - curl
       pip:
         - openshift
+    firewall_allowed_tcp_ports:
+      - "22"
+      - "80"
+      - "6443"
+    firewall_allowed_udp_ports:
+      - "8472"
+    firewall_enable_ipv6: false
   
   roles:
     - install-dependencies
+    - geerlingguy.firewall
 
   tasks:
+    - meta: flush_handlers
+    
     # Set up k3s master
     # TODO: see if this can be rewritten in a clean way with get_url and command/script
     - name: Install k3s
@@ -105,11 +115,20 @@
         - curl
       pip:
         - openshift
+    firewall_allowed_tcp_ports:
+      - "22"
+      - "6443"
+    firewall_allowed_udp_ports:
+      - "8472"
+    firewall_enable_ipv6: false
   
   roles:
     - install-dependencies
+    - geerlingguy.firewall
 
   tasks:
+    - meta: flush_handlers
+    
     # TODO: actually make it fail it shell command fails...
     #       now it just say changed and does nothing
     - name: Install k3s (as a worker/agent)
